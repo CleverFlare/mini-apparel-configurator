@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mini-apparel-configurator",
+  "compatibility_date": "2026-10-01",
+  // Static site only: Vite's build output, served with public/_headers.
+  "assets": {
+    "directory": "./dist"
+  }
+}

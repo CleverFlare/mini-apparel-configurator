@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
   MathUtils,
   NeutralToneMapping,
   type PerspectiveCamera,
-  NoColorSpace,
   type Mesh,
   type MeshPhysicalMaterial,
 } from "three";
 import { WebGPURenderer } from "three/webgpu";
-import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
-import sweaterUrl from "@/assets/sweater.glb?url";
-import maskUrl from "@/assets/sweater_mask.png";
+import { OrbitControls } from "@react-three/drei";
 import mySignature from "@/assets/my-signature.png";
 import { Studio } from "@/components/studio";
 import { ConfiguratorPanel } from "@/components/configurator-panel";
+import { LoadingOverlay } from "@/components/loading-overlay";
+import { sweaterMask, sweaterModel } from "@/lib/sweater-assets";
 import type { Zone } from "@/lib/parts";
 import {
   createSweaterMaterial,
@@ -35,12 +34,8 @@ const DEFAULT_COLORS: ZoneColors = {
 };
 
 function Sweater({ colors }: { colors: ZoneColors }) {
-  const { nodes, materials } = useGLTF(sweaterUrl);
-  const mask = useTexture(maskUrl, (texture) => {
-    // Match glTF UV conventions, and keep the mask as raw data.
-    texture.flipY = false;
-    texture.colorSpace = NoColorSpace;
-  });
+  const { nodes, materials } = use(sweaterModel);
+  const mask = use(sweaterMask);
 
   // Built once with the defaults; color changes only update its uniforms.
   const { material, zoneColors } = useMemo(
@@ -83,8 +78,6 @@ function Sweater({ colors }: { colors: ZoneColors }) {
     </group>
   );
 }
-
-useGLTF.preload(sweaterUrl);
 
 // The garment is wide (arms out), so on a portrait view the camera's distance
 // is set by width rather than height. Keeps the orbit direction.
@@ -150,6 +143,7 @@ function App() {
         }
         onReset={() => setColors(DEFAULT_COLORS)}
       />
+      <LoadingOverlay />
     </div>
   );
 }
