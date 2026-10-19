@@ -71,9 +71,9 @@ export function ConfiguratorPanel({
     <Card
       aria-label="Customize"
       className={cn(
-        "relative z-10 max-h-[80dvh] shrink-0",
+        "relative z-10 max-h-[60dvh] shrink-0",
         // Mobile: a bottom sheet. Desktop: a card docked to the right.
-        "rounded-b-none md:m-4 md:max-h-none md:w-95 md:rounded-xl",
+        "rounded-b-none md:m-4 md:max-h-none md:w-95 md:rounded-xl p-0 gap-0",
       )}
     >
       <CardHeader className="hidden md:grid">
@@ -81,7 +81,7 @@ export function ConfiguratorPanel({
         <CardDescription>Choose a color for each part.</CardDescription>
       </CardHeader>
 
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto py-4">
         <ToggleGroup
           aria-label="Part"
           variant="outline"
