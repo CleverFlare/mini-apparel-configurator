@@ -29,7 +29,8 @@ export type ZoneColors = {
 // Tints the neutral base color texture per zone, and lifts unlit areas so dark
 // fabric doesn't crush to black on the side facing away from the lights. The
 // lift is stronger for darker colors, so light colors stay close to physically
-// lit. Built on a copy so the cached GLTF material stays untouched.
+// lit. Built on a copy so the cached GLTF material stays untouched. Returns
+// the zone color uniforms too, so colors can change without a recompile.
 export function createSweaterMaterial(
   source: MeshPhysicalMaterial,
   zoneMask: Texture,
@@ -52,11 +53,17 @@ export function createSweaterMaterial(
   // Each mask channel marks a zone; pixels outside all three are the body.
   const zone = texture(zoneMask).rgb;
   const bodyWeight = saturate(zone.r.add(zone.g).add(zone.b).oneMinus());
-  const tint = uniform(new Color(colors.body))
+  const zoneColors = {
+    body: uniform(new Color(colors.body)),
+    sleeves: uniform(new Color(colors.sleeves)),
+    hood: uniform(new Color(colors.hood)),
+    trim: uniform(new Color(colors.trim)),
+  };
+  const tint = zoneColors.body
     .mul(bodyWeight)
-    .add(uniform(new Color(colors.sleeves)).mul(zone.r))
-    .add(uniform(new Color(colors.hood)).mul(zone.g))
-    .add(uniform(new Color(colors.trim)).mul(zone.b));
+    .add(zoneColors.sleeves.mul(zone.r))
+    .add(zoneColors.hood.mul(zone.g))
+    .add(zoneColors.trim.mul(zone.b));
   material.colorNode = materialColor.mul(tint);
 
   // Soft floor applied to the lit color before tone mapping: near zero light
@@ -76,7 +83,7 @@ export function createSweaterMaterial(
     );
   })();
 
-  return material;
+  return { material, zoneColors };
 }
 
 // The zipper pull keeps its own textures and isn't tinted; only the export's
