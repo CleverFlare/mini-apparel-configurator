@@ -13,6 +13,7 @@ import maskUrl from "@/assets/sweater_mask.png";
 import { Studio } from "@/components/studio";
 import {
   createSweaterMaterial,
+  createZipperPullMaterial,
   type ZoneColors,
 } from "@/materials/sweater-material";
 
@@ -46,13 +47,29 @@ function Sweater() {
       ),
     [materials, mask],
   );
+  const zipperPullMaterial = useMemo(
+    () =>
+      createZipperPullMaterial(materials.ZipperPull as MeshPhysicalMaterial),
+    [materials],
+  );
+  const zipperPull = nodes.ZipperPull as Mesh;
 
   return (
-    <mesh
-      geometry={(nodes.Sweater as Mesh).geometry}
-      material={material}
-      castShadow
-    />
+    <group>
+      <mesh
+        geometry={(nodes.Sweater as Mesh).geometry}
+        material={material}
+        castShadow
+      />
+      <mesh
+        geometry={zipperPull.geometry}
+        material={zipperPullMaterial}
+        position={zipperPull.position}
+        quaternion={zipperPull.quaternion}
+        scale={zipperPull.scale}
+        castShadow
+      />
+    </group>
   );
 }
 

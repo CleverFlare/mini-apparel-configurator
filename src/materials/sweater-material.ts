@@ -15,6 +15,10 @@ import {
   vec4,
 } from "three/tsl";
 
+// The GLB ships every material with an IOR of 1000, which turns the surface
+// into a near-mirror and suppresses the diffuse color. Use a typical value.
+const EXPORT_IOR_FIX = 1.5;
+
 export type ZoneColors = {
   body: string;
   sleeves: string; // mask red
@@ -39,9 +43,7 @@ export function createSweaterMaterial(
     source.clone(),
   );
 
-  // The GLB ships an IOR of 1000, which turns the fabric into a near-mirror
-  // and suppresses the diffuse color. Use a typical fabric value instead.
-  material.ior = 1.5;
+  material.ior = EXPORT_IOR_FIX;
   // Soft fiber sheen keeps folds readable on dark colors.
   material.sheen = 1;
   material.sheenRoughness = 0.6;
@@ -74,5 +76,13 @@ export function createSweaterMaterial(
     );
   })();
 
+  return material;
+}
+
+// The zipper pull keeps its own textures and isn't tinted; only the export's
+// IOR is fixed, on a copy so the cached GLTF material stays untouched.
+export function createZipperPullMaterial(source: MeshPhysicalMaterial) {
+  const material = source.clone();
+  material.ior = EXPORT_IOR_FIX;
   return material;
 }
