@@ -71,12 +71,12 @@ export function ConfiguratorPanel({
     <Card
       aria-label="Customize"
       className={cn(
-        "relative z-10 max-h-[60dvh] shrink-0",
+        "relative z-10 max-h-100 shrink-0",
         // Mobile: a bottom sheet. Desktop: a card docked to the right.
         "rounded-b-none md:m-4 md:max-h-none md:w-95 md:rounded-xl p-0 gap-0",
       )}
     >
-      <CardHeader className="hidden md:grid">
+      <CardHeader className="hidden md:grid pt-4">
         <CardTitle>Customize</CardTitle>
         <CardDescription>Choose a color for each part.</CardDescription>
       </CardHeader>
