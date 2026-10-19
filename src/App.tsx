@@ -12,6 +12,7 @@ import { WebGPURenderer } from "three/webgpu";
 import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import sweaterUrl from "@/assets/sweater.glb?url";
 import maskUrl from "@/assets/sweater_mask.png";
+import mySignature from "@/assets/my-signature.png";
 import { Studio } from "@/components/studio";
 import { ConfiguratorPanel } from "@/components/configurator-panel";
 import type { Zone } from "@/lib/parts";
@@ -110,9 +111,9 @@ function App() {
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] md:flex-row">
       <main className="relative min-h-0 flex-1">
-        <header className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-[max(env(safe-area-inset-top),1rem)] md:px-6 md:pt-6">
-          <p className="text-sm text-muted-foreground">Made to order</p>
-          <h1 className="text-xl font-semibold">The Field Half-Zip</h1>
+        <header className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-[max(env(safe-area-inset-top),1rem)] md:px-6 md:pt-6 flex flex-col gap-1 w-max items-center">
+          <p className="sm:text-sm text-xs text-muted-foreground">Made By</p>
+          <img src={mySignature} className="lg:w-50 md:w-40 w-30" />
         </header>
         <Canvas
           camera={{ position: [0, 0.3, CAMERA_DISTANCE], fov: 45 }}
