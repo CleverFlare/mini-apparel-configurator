@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useState } from "react";
 import { ChevronUpIcon, RotateCcwIcon } from "lucide-react";
 import {
   ColorPicker,
@@ -48,9 +48,6 @@ function colorName(hex: string) {
   );
 }
 
-// How far the sheet's handle must travel to count as a swipe, in px.
-const SWIPE_THRESHOLD = 24;
-
 export function ConfiguratorPanel({
   colors,
   selected,
@@ -67,22 +64,8 @@ export function ConfiguratorPanel({
   // Mobile only: the custom picker is tucked away until the sheet is swiped
   // up. On desktop the panel always shows it.
   const [expanded, setExpanded] = useState(false);
-  const swipeStart = useRef<number | null>(null);
   const part = PARTS.find((p) => p.zone === selected)!;
   const color = colors[selected];
-
-  const onHandlePointerDown = (event: PointerEvent<HTMLElement>) => {
-    swipeStart.current = event.clientY;
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-  const onHandlePointerUp = (event: PointerEvent<HTMLElement>) => {
-    if (swipeStart.current === null) return;
-    const delta = event.clientY - swipeStart.current;
-    swipeStart.current = null;
-    if (delta < -SWIPE_THRESHOLD) setExpanded(true);
-    else if (delta > SWIPE_THRESHOLD) setExpanded(false);
-    else setExpanded((open) => !open);
-  };
 
   return (
     <Card
@@ -93,18 +76,6 @@ export function ConfiguratorPanel({
         "rounded-b-none md:m-4 md:max-h-none md:w-95 md:rounded-xl",
       )}
     >
-      <button
-        type="button"
-        aria-label={expanded ? "Collapse" : "Expand"}
-        aria-expanded={expanded}
-        onPointerDown={onHandlePointerDown}
-        onPointerUp={onHandlePointerUp}
-        onPointerCancel={() => (swipeStart.current = null)}
-        className="-mt-2 flex h-4 w-full shrink-0 touch-none items-center justify-center md:hidden"
-      >
-        <span className="h-1 w-10 rounded-full bg-muted-foreground/30" />
-      </button>
-
       <CardHeader className="hidden md:grid">
         <CardTitle>Customize</CardTitle>
         <CardDescription>Choose a color for each part.</CardDescription>
@@ -160,7 +131,7 @@ export function ConfiguratorPanel({
                   value={swatch.value}
                   label={swatch.label}
                   title={swatch.label}
-                  className="w-full"
+                  className="w-full cursor-pointer"
                 />
               ))}
             </ColorPickerSwatches>
