@@ -90,7 +90,7 @@ export function ConfiguratorPanel({
       className={cn(
         "relative z-10 max-h-[80dvh] shrink-0",
         // Mobile: a bottom sheet. Desktop: a card docked to the right.
-        "rounded-b-none md:m-4 md:max-h-none md:w-[380px] md:rounded-xl",
+        "rounded-b-none md:m-4 md:max-h-none md:w-95 md:rounded-xl",
       )}
     >
       <button
@@ -151,13 +151,16 @@ export function ConfiguratorPanel({
                 {colorName(color)} <span className="uppercase">{color}</span>
               </p>
             </div>
-            <ColorPickerSwatches>
+            {/* Three rows on mobile, two on desktop; each swatch stretches to
+                its column, so they're easy to tap. */}
+            <ColorPickerSwatches className="grid-cols-4 gap-2 [--color-picker-swatch-size:--spacing(10)] md:grid-cols-6">
               {PALETTE.map((swatch) => (
                 <ColorPickerSwatchItem
                   key={swatch.value}
                   value={swatch.value}
                   label={swatch.label}
                   title={swatch.label}
+                  className="w-full"
                 />
               ))}
             </ColorPickerSwatches>
