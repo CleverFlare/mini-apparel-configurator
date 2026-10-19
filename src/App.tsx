@@ -1,78 +1,88 @@
-import { Suspense } from "react";
+import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
-  Center,
-  ContactShadows,
-  Environment,
-  Lightformer,
-  OrbitControls,
-  useGLTF,
-} from "@react-three/drei";
+  NeutralToneMapping,
+  NoColorSpace,
+  type Mesh,
+  type MeshPhysicalMaterial,
+} from "three";
+import { WebGPURenderer } from "three/webgpu";
+import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import sweaterUrl from "@/assets/sweater.glb?url";
+import maskUrl from "@/assets/sweater_mask.png";
+import { Studio } from "@/components/studio";
+import {
+  createSweaterMaterial,
+  type ZoneColors,
+} from "@/materials/sweater-material";
+
+// How much unlit areas are brightened. The lift is stronger for darker colors,
+// so dark fabric doesn't crush to black on the side facing away from the
+// lights, while light colors stay close to physically lit.
+const SHADOW_LIFT = 0.35;
+
+const DEFAULT_COLORS: ZoneColors = {
+  body: "#323232",
+  sleeves: "#838383",
+  hood: "#919191",
+  trim: "#616161",
+};
 
 function Sweater() {
-  const { scene } = useGLTF(sweaterUrl);
-  return <primitive object={scene} />;
+  const { nodes, materials } = useGLTF(sweaterUrl);
+  const mask = useTexture(maskUrl, (texture) => {
+    // Match glTF UV conventions, and keep the mask as raw data.
+    texture.flipY = false;
+    texture.colorSpace = NoColorSpace;
+  });
+
+  const material = useMemo(
+    () =>
+      createSweaterMaterial(
+        materials.Sweater as MeshPhysicalMaterial,
+        mask,
+        DEFAULT_COLORS,
+        SHADOW_LIFT,
+      ),
+    [materials, mask],
+  );
+
+  return (
+    <mesh
+      geometry={(nodes.Sweater as Mesh).geometry}
+      material={material}
+      castShadow
+    />
+  );
 }
 
 useGLTF.preload(sweaterUrl);
 
-// Studio-style lighting built locally, so nothing is fetched from a CDN.
-function Lighting() {
-  return (
-    <>
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[3, 4, 5]} intensity={1.5} />
-      <directionalLight position={[-4, 2, -3]} intensity={0.6} />
-      <Environment resolution={256}>
-        <Lightformer
-          form="rect"
-          intensity={2}
-          position={[0, 3, 4]}
-          scale={[6, 3, 1]}
-        />
-        <Lightformer
-          form="rect"
-          intensity={1}
-          position={[-5, 1, 0]}
-          rotation-y={Math.PI / 2}
-          scale={[4, 4, 1]}
-        />
-        <Lightformer
-          form="rect"
-          intensity={1}
-          position={[5, 1, 0]}
-          rotation-y={-Math.PI / 2}
-          scale={[4, 4, 1]}
-        />
-        <Lightformer
-          form="ring"
-          intensity={0.5}
-          position={[0, 2, -5]}
-          scale={3}
-        />
-      </Environment>
-    </>
-  );
-}
-
 function App() {
   return (
-    <div className="relative h-dvh w-full bg-muted">
-      <Canvas camera={{ position: [0, 0.3, 4.5], fov: 45 }}>
-        <Lighting />
-        <Suspense fallback={null}>
-          <Center>
-            <Sweater />
-          </Center>
-          <ContactShadows
-            position={[0, -1.05, 0]}
-            opacity={0.4}
-            scale={6}
-            blur={2.5}
-            far={2}
-          />
-        </Suspense>
+    <div className="relative h-dvh w-full bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
+      <Canvas
+        camera={{ position: [0, 0.3, 4.5], fov: 45 }}
+        // Variance shadow maps, so the floor shadow can be blurred.
+        shadows="variance"
+        // WebGPU where available, otherwise its WebGL 2 backend; both run TSL.
+        gl={async (props) => {
+          const renderer = new WebGPURenderer(
+            props as ConstructorParameters<typeof WebGPURenderer>[0],
+          );
+          await renderer.init();
+          return renderer;
+        }}
+        // Set after creation, since R3F applies its own tone mapping default
+        // to renderers built by a factory.
+        onCreated={({ gl }) => {
+          gl.toneMapping = NeutralToneMapping;
+          gl.toneMappingExposure = 1.2;
+        }}
+      >
+        <Studio>
+          <Sweater />
+        </Studio>
         <OrbitControls makeDefault target={[0, 0, 0]} />
       </Canvas>
     </div>
