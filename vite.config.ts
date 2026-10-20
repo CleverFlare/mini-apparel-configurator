@@ -6,7 +6,10 @@ import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // Assets whose download progress the loading overlay tracks.
-const TRACKED_ASSETS = ['src/assets/sweater.glb', 'src/assets/sweater_mask.png']
+const TRACKED_ASSETS = [
+  'src/assets/sweater.glb',
+  'src/assets/sweater_mask.ktx2',
+]
 
 // Exposes the tracked assets' byte sizes, keyed by file name, as
 // `virtual:asset-sizes`. The loader counts decompressed bytes against these,
@@ -68,9 +71,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache the whole build, the sweater model included, so the
-        // installed app works fully offline.
-        globPatterns: ['**/*.{js,css,html,glb,png,svg,ico,woff2}'],
+        // Precache the whole build, the sweater model and the KTX2
+        // transcoder included, so the installed app works fully offline.
+        globPatterns: ['**/*.{js,css,html,glb,ktx2,wasm,png,svg,ico,woff2}'],
         maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         cleanupOutdatedCaches: true,
       },

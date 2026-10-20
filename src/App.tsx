@@ -14,7 +14,11 @@ import { Studio } from "@/components/studio";
 import { ConfiguratorPanel } from "@/components/configurator-panel";
 import { InstallPrompt } from "@/components/install-prompt";
 import { LoadingOverlay } from "@/components/loading-overlay";
-import { sweaterMask, sweaterModel } from "@/lib/sweater-assets";
+import {
+  setSweaterRenderer,
+  sweaterMask,
+  sweaterModel,
+} from "@/lib/sweater-assets";
 import type { Zone } from "@/lib/parts";
 import {
   createSweaterMaterial,
@@ -146,6 +150,7 @@ function App() {
               props as ConstructorParameters<typeof WebGPURenderer>[0],
             );
             await renderer.init();
+            setSweaterRenderer(renderer);
             return renderer;
           }}
           // Set after creation, since R3F applies its own tone mapping default
