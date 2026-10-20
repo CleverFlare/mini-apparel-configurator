@@ -122,16 +122,25 @@ export function ConfiguratorPanel({
                 {colorName(color)} <span className="uppercase">{color}</span>
               </p>
             </div>
-            {/* Three rows on mobile, two on desktop; each swatch stretches to
-                its column, so they're easy to tap. */}
-            <ColorPickerSwatches className="grid-cols-4 gap-2 [--color-picker-swatch-size:--spacing(10)] md:grid-cols-6">
+            {/* Mobile: one row that scrolls edge to edge like a native
+                carousel. It bleeds past the card's padding and takes that
+                padding back inside, so the first swatch lines up with the
+                content above and the row runs off the sheet's edge. The
+                vertical padding leaves room for the focus outline. Desktop:
+                two rows, each swatch stretching to its column. */}
+            <ColorPickerSwatches
+              className={cn(
+                "-mx-(--card-spacing) -my-1.5 flex snap-x snap-mandatory scroll-px-(--card-spacing) gap-2 overflow-x-auto overscroll-x-contain px-(--card-spacing) py-1.5 [scrollbar-width:none] [--color-picker-swatch-size:--spacing(10)] [&::-webkit-scrollbar]:hidden",
+                "md:m-0 md:grid md:snap-none md:grid-cols-6 md:overflow-visible md:p-0",
+              )}
+            >
               {PALETTE.map((swatch) => (
                 <ColorPickerSwatchItem
                   key={swatch.value}
                   value={swatch.value}
                   label={swatch.label}
                   title={swatch.label}
-                  className="w-full cursor-pointer"
+                  className="w-16 cursor-pointer snap-start md:w-full"
                 />
               ))}
             </ColorPickerSwatches>
