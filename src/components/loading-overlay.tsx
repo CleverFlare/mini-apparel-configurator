@@ -56,7 +56,7 @@ export function LoadingOverlay() {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] px-4 transition-opacity duration-300 motion-reduce:transition-none",
+        "fixed inset-0 z-60 flex items-center justify-center bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] px-4 transition-opacity duration-300 motion-reduce:transition-none",
         done && "pointer-events-none opacity-0",
       )}
     >

@@ -1,4 +1,4 @@
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import {
   MathUtils,
@@ -100,9 +100,14 @@ function FitCamera() {
 function App() {
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [selectedZone, setSelectedZone] = useState<Zone>("body");
+  // Collapsed height of the mobile sheet, kept clear below the viewport.
+  const [sheetPeek, setSheetPeek] = useState(0);
 
   return (
-    <div className="flex h-dvh w-full flex-col overflow-hidden bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] md:flex-row">
+    <div
+      className="flex h-dvh w-full flex-col overflow-hidden bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] pb-(--sheet-peek) md:flex-row md:pb-0"
+      style={{ "--sheet-peek": `${sheetPeek}px` } as CSSProperties}
+    >
       <main className="relative min-h-0 flex-1">
         <header className="pointer-events-none absolute top-0 left-0 z-10 flex flex-col gap-1.5 pt-[max(env(safe-area-inset-top),1.25rem)] pl-[max(env(safe-area-inset-left),1.25rem)] md:pt-8 md:pl-8">
           <p className="pl-[0.3em] text-[0.625rem] font-medium tracking-[0.25em] text-muted-foreground uppercase md:text-[0.6875rem]">
@@ -153,6 +158,7 @@ function App() {
           setColors((current) => ({ ...current, [zone]: color }))
         }
         onReset={() => setColors(DEFAULT_COLORS)}
+        onPeekChange={setSheetPeek}
       />
       <LoadingOverlay />
     </div>
