@@ -1,5 +1,5 @@
 import { use, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { addAfterEffect, Canvas, useThree } from "@react-three/fiber";
 import {
   MathUtils,
   NeutralToneMapping,
@@ -19,6 +19,7 @@ import {
   sweaterMask,
   sweaterModel,
 } from "@/lib/sweater-assets";
+import { firstFrameRendered, shadersProgress } from "@/lib/load-stages";
 import type { Zone } from "@/lib/parts";
 import {
   createSweaterMaterial,
@@ -85,6 +86,39 @@ function Sweater({ colors }: { colors: ZoneColors }) {
       />
     </group>
   );
+}
+
+// Mounted beside the model, so it runs once the model is in the scene:
+// compiles every shader up front, reporting progress, then marks the first
+// frame drawn after that, when the model is actually on screen.
+function ReportSceneReady() {
+  const gl = useThree((state) => state.gl) as unknown as WebGPURenderer;
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useEffect(() => {
+    let cancelled = false;
+    let removeAfterEffect: (() => void) | undefined;
+    void gl
+      .compileAsync(scene, camera, null, (event) =>
+        shadersProgress(event.loaded, event.total),
+      )
+      .then(() => {
+        if (cancelled) return;
+        removeAfterEffect = addAfterEffect(() => {
+          firstFrameRendered();
+          removeAfterEffect?.();
+        });
+        invalidate();
+      });
+    return () => {
+      cancelled = true;
+      removeAfterEffect?.();
+    };
+  }, [gl, scene, camera, invalidate]);
+
+  return null;
 }
 
 // The garment is wide (arms out), so on a portrait view the camera's distance
@@ -162,6 +196,7 @@ function App() {
         >
           <Studio>
             <Sweater colors={colors} />
+            <ReportSceneReady />
           </Studio>
           <OrbitControls makeDefault target={[0, 0, 0]} />
           <FitCamera />

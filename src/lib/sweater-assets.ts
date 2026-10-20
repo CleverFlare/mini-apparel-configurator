@@ -11,9 +11,45 @@ import type { WebGPURenderer } from "three/webgpu";
 import sweaterUrl from "@/assets/sweater.glb?url";
 import maskUrl from "@/assets/sweater_mask.ktx2?url";
 import { loadAsset } from "@/lib/asset-loader";
+import {
+  expectTextures,
+  expectTexturesLater,
+  textureDecoded,
+} from "@/lib/load-stages";
 
 // Downloads start when this module is first imported, before React mounts.
 // Both promises are stable, so components can suspend on them with `use`.
+
+// Counts each texture as it finishes transcoding. GLTFLoader loads every
+// KTX2 image of the model through `load`, once per image.
+class CountingKTX2Loader extends KTX2Loader {
+  load(...[url, onLoad, onProgress, onError]: Parameters<KTX2Loader["load"]>) {
+    super.load(
+      url,
+      (texture) => {
+        textureDecoded();
+        onLoad(texture);
+      },
+      onProgress,
+      onError,
+    );
+  }
+}
+
+// The number of distinct KTX2 images a GLB's textures use, read from its
+// JSON chunk, which follows the 12-byte header and the chunk's own 8 bytes.
+function countKtx2Images(glb: ArrayBuffer) {
+  const length = new DataView(glb).getUint32(12, true);
+  const json = JSON.parse(
+    new TextDecoder().decode(new Uint8Array(glb, 20, length)),
+  ) as {
+    textures?: { extensions?: { KHR_texture_basisu?: { source: number } } }[];
+  };
+  const sources = (json.textures ?? []).flatMap(
+    (texture) => texture.extensions?.KHR_texture_basisu?.source ?? [],
+  );
+  return new Set(sources).size;
+}
 
 // The KTX2 textures are transcoded to whichever compressed format the GPU
 // supports, which needs the initialized renderer; the canvas hands it over.
@@ -21,7 +57,7 @@ let provideRenderer!: (renderer: WebGPURenderer) => void;
 const ktx2Loader = new Promise<WebGPURenderer>(
   (resolve) => (provideRenderer = resolve),
 ).then((renderer) =>
-  new KTX2Loader()
+  new CountingKTX2Loader()
     // Served from public/, so the loader can find both files by name.
     .setTranscoderPath(`${import.meta.env.BASE_URL}libs/basis/`)
     .detectSupport(renderer),
@@ -32,9 +68,16 @@ export function setSweaterRenderer(renderer: WebGPURenderer) {
   provideRenderer(renderer);
 }
 
-// The sweater model's objects and materials, keyed by name.
+// The sweater model's objects and materials, keyed by name. Its texture
+// count is in the file itself.
+const expectModelTextures = expectTexturesLater();
 export const sweaterModel = Promise.all([
-  loadAsset(sweaterUrl, "sweater.glb").then((blob) => blob.arrayBuffer()),
+  loadAsset(sweaterUrl, "sweater.glb")
+    .then((blob) => blob.arrayBuffer())
+    .then((buffer) => {
+      expectModelTextures(countKtx2Images(buffer));
+      return buffer;
+    }),
   ktx2Loader,
 ])
   .then(([buffer, ktx2]) =>
@@ -55,6 +98,7 @@ export const sweaterModel = Promise.all([
 
 // Zone mask: each channel marks a zone of the sweater's UV layout. Encoded
 // linear, and like the model's textures it keeps glTF's UV orientation.
+expectTextures(1);
 export const sweaterMask = Promise.all([
   loadAsset(maskUrl, "sweater_mask.ktx2").then((blob) => blob.arrayBuffer()),
   ktx2Loader,
@@ -66,6 +110,7 @@ export const sweaterMask = Promise.all([
         (texture) => {
           // Raw data, not a color.
           texture.colorSpace = NoColorSpace;
+          textureDecoded();
           resolve(texture as CompressedTexture);
         },
         reject,
