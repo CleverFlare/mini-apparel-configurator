@@ -12,6 +12,7 @@ import { OrbitControls } from "@react-three/drei";
 import signature from "@/assets/my-signature.svg";
 import { Studio } from "@/components/studio";
 import { ConfiguratorPanel } from "@/components/configurator-panel";
+import { InstallPrompt } from "@/components/install-prompt";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { sweaterMask, sweaterModel } from "@/lib/sweater-assets";
 import type { Zone } from "@/lib/parts";
@@ -124,6 +125,9 @@ function App() {
             style={{ maskImage: `url(${signature})` }}
           />
         </header>
+        <div className="absolute top-0 right-0 z-10 pt-[max(env(safe-area-inset-top),1.25rem)] pr-[max(env(safe-area-inset-right),1.25rem)] md:pt-8 md:pr-8">
+          <InstallPrompt />
+        </div>
         <Canvas
           camera={{ position: [0, 0.3, CAMERA_DISTANCE], fov: 45 }}
           // Variance shadow maps, so the floor shadow can be blurred.
