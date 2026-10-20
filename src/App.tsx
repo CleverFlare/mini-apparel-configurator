@@ -9,7 +9,7 @@ import {
 } from "three";
 import { WebGPURenderer } from "three/webgpu";
 import { OrbitControls } from "@react-three/drei";
-import mySignature from "@/assets/my-signature.png";
+import signature from "@/assets/my-signature.svg";
 import { Studio } from "@/components/studio";
 import { ConfiguratorPanel } from "@/components/configurator-panel";
 import { LoadingOverlay } from "@/components/loading-overlay";
@@ -104,9 +104,20 @@ function App() {
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)] md:flex-row">
       <main className="relative min-h-0 flex-1">
-        <header className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-[max(env(safe-area-inset-top),1rem)] md:px-6 md:pt-6 flex flex-col gap-1 w-max items-center">
-          <p className="sm:text-sm text-xs text-muted-foreground">Made By</p>
-          <img src={mySignature} className="lg:w-50 md:w-40 w-30" />
+        <header className="pointer-events-none absolute top-0 left-0 z-10 flex flex-col gap-1.5 pt-[max(env(safe-area-inset-top),1.25rem)] pl-[max(env(safe-area-inset-left),1.25rem)] md:pt-8 md:pl-8">
+          <p className="pl-[0.3em] text-[0.625rem] font-medium tracking-[0.25em] text-muted-foreground uppercase md:text-[0.6875rem]">
+            Made by
+          </p>
+          {/* The signature is a mask over the text color, so it follows the
+              theme and stays sharp at any size. Its width follows the
+              viewport, and the height too, so it stays small on phones held
+              sideways. */}
+          <span
+            role="img"
+            aria-label="Muhammad Maher"
+            className="aspect-[2504/520] w-[clamp(7rem,min(12vw,28vh),11.5rem)] bg-foreground/80 mask-contain mask-center mask-no-repeat"
+            style={{ maskImage: `url(${signature})` }}
+          />
         </header>
         <Canvas
           camera={{ position: [0, 0.3, CAMERA_DISTANCE], fov: 45 }}
