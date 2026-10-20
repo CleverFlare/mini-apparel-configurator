@@ -37,6 +37,7 @@ const DEFAULT_COLORS: ZoneColors = {
 function Sweater({ colors }: { colors: ZoneColors }) {
   const { nodes, materials } = use(sweaterModel);
   const mask = use(sweaterMask);
+  const invalidate = useThree((state) => state.invalidate);
 
   // Built once with the defaults; color changes only update its uniforms.
   const { material, zoneColors } = useMemo(
@@ -53,7 +54,9 @@ function Sweater({ colors }: { colors: ZoneColors }) {
     for (const zone of Object.keys(zoneColors) as Zone[]) {
       zoneColors[zone].value.set(colors[zone]);
     }
-  }, [zoneColors, colors]);
+    // Uniforms change outside React's props, so request the frame.
+    invalidate();
+  }, [zoneColors, colors, invalidate]);
   const zipperPullMaterial = useMemo(
     () =>
       createZipperPullMaterial(materials.ZipperPull as MeshPhysicalMaterial),
@@ -88,12 +91,14 @@ const GARMENT_HALF_WIDTH = 1.75;
 function FitCamera() {
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const aspect = useThree((state) => state.size.width / state.size.height);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
     const halfFov = MathUtils.degToRad(camera.fov / 2);
     const widthDistance = GARMENT_HALF_WIDTH / (Math.tan(halfFov) * aspect);
     camera.position.setLength(Math.max(CAMERA_DISTANCE, widthDistance));
-  }, [camera, aspect]);
+    invalidate();
+  }, [camera, aspect, invalidate]);
 
   return null;
 }
@@ -130,6 +135,9 @@ function App() {
         </div>
         <Canvas
           camera={{ position: [0, 0.3, CAMERA_DISTANCE], fov: 45 }}
+          // The scene only changes on orbit, color or resize, so frames render
+          // on demand rather than 60 times a second.
+          frameloop="demand"
           // Variance shadow maps, so the floor shadow can be blurred.
           shadows="variance"
           // WebGPU where available, otherwise its WebGL 2 backend; both run TSL.

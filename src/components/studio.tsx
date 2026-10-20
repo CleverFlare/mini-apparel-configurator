@@ -1,7 +1,15 @@
-import { Suspense, useEffect, useMemo, type ReactNode } from "react";
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useThree } from "@react-three/fiber";
 import { Center } from "@react-three/drei";
 import {
+  type DirectionalLight,
   DoubleSide,
   Mesh,
   MeshBasicMaterial,
@@ -32,6 +40,7 @@ const SOFTBOXES: [Vector3Tuple, [number, number], number][] = [
 function StudioEnvironment() {
   const gl = useThree((state) => state.gl) as unknown as WebGPURenderer;
   const scene = useThree((state) => state.scene);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
     const geometry = new PlaneGeometry();
@@ -52,6 +61,8 @@ function StudioEnvironment() {
     const pmrem = new PMREMGenerator(gl);
     const target = pmrem.fromScene(softboxes);
     scene.environment = target.texture;
+    // Frames render on demand, so ask for one with the new lighting.
+    invalidate();
 
     return () => {
       scene.environment = null;
@@ -62,7 +73,22 @@ function StudioEnvironment() {
         if (object instanceof Mesh) object.material.dispose();
       });
     };
-  }, [gl, scene]);
+  }, [gl, scene, invalidate]);
+
+  return null;
+}
+
+// Renders the shadow map once the model has mounted. The scene is static and
+// the shadow light points straight down, so orbiting and color changes never
+// change the shadow; recomputing it every frame would only cost GPU time.
+function RefreshShadow({ light }: { light: DirectionalLight | null }) {
+  const invalidate = useThree((state) => state.invalidate);
+
+  useLayoutEffect(() => {
+    if (!light) return;
+    light.shadow.needsUpdate = true;
+    invalidate();
+  }, [light, invalidate]);
 
   return null;
 }
@@ -78,6 +104,9 @@ export function Studio({ children }: { children: ReactNode }) {
     () => new ShadowNodeMaterial({ opacity: 0.5 }),
     [],
   );
+  const [shadowLight, setShadowLight] = useState<DirectionalLight | null>(
+    null,
+  );
 
   return (
     <>
@@ -86,9 +115,11 @@ export function Studio({ children }: { children: ReactNode }) {
       {/* Shadow only: straight down and adding no light, so the floor gets a
           soft contact shadow under the model. */}
       <directionalLight
+        ref={setShadowLight}
         position={[0, 5, 0]}
         intensity={0}
         castShadow
+        shadow-autoUpdate={false}
         shadow-mapSize={[512, 512]}
         shadow-radius={20}
         shadow-blurSamples={25}
@@ -105,6 +136,8 @@ export function Studio({ children }: { children: ReactNode }) {
         >
           <planeGeometry args={[10, 10]} />
         </mesh>
+        {/* Inside the boundary, so it runs once the model is in. */}
+        <RefreshShadow light={shadowLight} />
       </Suspense>
     </>
   );
